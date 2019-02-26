@@ -59,14 +59,13 @@ def parse_input_sequence(sequence_input):
 
 def find_motif_indices(motif_list, sequence_list):
     '''Finds provided motifs in the FASTA sequences with RegEx.
-    Compatible with all IUPAC ambiguity codes.
-    Returns a list of nested dictionaries, one dictionary per sequence ID.
-    Each sequence ID dictionary has the sequence ID as a key
-    and a dictionary of motifs as values.
-    Motif values are a dictionary with the motif sequence as the key 
-    and a list of indices as the values.
-    These indices refer to left-most mapping positions of the 
-    motif in the sequence.'''
+    Returns their indices as 4 nested lists.
+    Outermost list has all target sequences in order of input
+    Each input sequence has its ID in index 0,
+    and a list of motif matches in index 1.
+    Each list of motif matches has the motif sequence in index 0 
+    and a list of match positions in index 1
+    '''
     all_matches = []
     for sequence in sequence_list:
         sequence_ID = sequence[0]
@@ -75,7 +74,7 @@ def find_motif_indices(motif_list, sequence_list):
         any_matches = False
         for motif in motif_list:
             individual_match = False
-            pattern = re.compile(motif)
+            pattern = re.compile(motif_to_regex(motif))
             match_indices = []
             for match in pattern.finditer(nucleotides):
                 any_matches = True
@@ -88,15 +87,43 @@ def find_motif_indices(motif_list, sequence_list):
     print(all_matches)
 
 
+def motif_to_regex(motif):
+    '''Converts a motif with potential IUPAC ambiguity codes to a
+    regex pattern which can match the desired sequence bases'''
+    conversion_dict = {
+        "A": "A",
+        "C": "C",
+        "G": "G",
+        "T": "T",
+        "U": "T",
+        "M": "[AC]",
+        "R": "[AG]",
+        "W": "[AT]",
+        "S": "[CG]",
+        "Y": "[CT]",
+        "K": "[GT]",
+        "V": "[ACG]",
+        "H": "[ACT]",
+        "D": "[AGT]",
+        "B": "[CGT]",
+        "N": "[GATC]"
+    }
+    pattern = ""
+    for base in motif:
+        pattern += conversion_dict[base]
+    return pattern
+
+
 def draw_figures():
     pass
 
 
 def main():
     args = get_arguments()
-    motif_list = parse_input_motifs(args.motifs_input)
+    motif_list = ["GATAC", "MATAM"]
     sequence_list = parse_input_sequence(args.sequence_input)
     find_motif_indices(motif_list, sequence_list)
+
 
 if __name__ == "__main__":
     main()
