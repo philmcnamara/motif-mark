@@ -44,8 +44,11 @@ def parse_input_sequence(sequence_input):
                 sequence = {}
                 sequence_name = line[1:]
                 sequence[sequence_name] = ""
+                line = sequence_file.readline().strip()
+                while line and line[0] != ">":
+                    sequence[sequence_name] += line
+                    line = sequence_file.readline().strip()
                 sequence_list.append(sequence)
-            line = sequence_file.readline().strip()
     return sequence_list
 
 
