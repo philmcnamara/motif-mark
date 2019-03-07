@@ -74,16 +74,16 @@ def find_motif_indices(motif_list, sequence_list):
         any_matches = False
         for motif in motif_list:
             individual_match = False
-            pattern = re.compile(motif_to_regex(motif))
+            pattern = re.compile(motif_to_regex(motif.upper()))
             match_indices = []
-            for match in pattern.finditer(nucleotides):
+            for match in pattern.finditer(nucleotides.upper()):
                 any_matches = True
                 individual_match = True
                 match_indices.append(match.start())
             if individual_match:
                 motif_matches.append([motif, match_indices])
         if any_matches:
-            all_matches.append([sequence_ID, motif_matches])
+            all_matches.append([sequence_ID, nucleotides, motif_matches])
     return all_matches
 
 
@@ -116,50 +116,105 @@ def motif_to_regex(motif):
 
 def draw_figures(matches):
     width = 1500
-    # Length of matches = number of sequences, each sequence gets an independent figure
+    # 1000 pixels per subfigure, 1 per sequence
     height = 1000 * len(matches)
-    surface = cairo.SVGSurface("figure.svg", width, height)
+    surface = cairo.SVGSurface("Figure_1.svg", width, height)
     ctx = cairo.Context(surface)
 
-    # Draw sequence
-    ctx.set_source_rgb(0, 0, 0)
-    ctx.set_line_width(10)
-    ctx.move_to(100, 800)
-    ctx.line_to(1400, 800)
-    ctx.stroke()
-
-    # Draw exon
-    ctx.rectangle(600, 750, 300, 100) # x,y of top left corner, width, height
-    ctx.fill()
+    # RGB colors for marking the motifs
+    colors = [
+        [0.2, 0.7, 0.2],  # green
+        [0.7, 0.45, 0.2],  # orange
+        [0.57, 0.2, 0.7],  # purple
+        [0.7, 0.7, 0.2],  # yellow
+        [0.2, 0.2, 0.7],  # dark blue
+        [0.7, 0.2, 0.2],  # red
+        [0.7, 0.7, 0.7],  # lavender
+        [0.2, 0.7, 0.7],  # sky blue
+        [0.2, 0.7, 0.5],  # teal
+        [0.5, 0.5, 0.5]  # gray
+    ]
     
-    # Sequence ID Title
-    ctx.move_to(100, 100)
-    ctx.set_font_size(36)
-    ctx.show_text("Sequence 1")
+    for s in range(len(matches)):
+        sequence = matches[s][1]
 
-    # Legend
-    ctx.move_to(1200, 100)
-    ctx.show_text("Legend")
+        # Sequence is always drawn with a length of 1300 pixels
+        # scale_factor is pixels/base
+        scale_factor = 1300/len(sequence)
 
-    # Divider to separate next figure
-    ctx.move_to(0, 1000)
-    ctx.set_source_rgb(0.5, 0.5, 0.5)
-    ctx.line_to(1500, 1000)
-    ctx.stroke()
+        # Draw sequence
+        ctx.set_source_rgb(0, 0, 0)
+        ctx.set_line_width(10)
+        ctx.move_to(100, 800 + 1000 * s)
+        ctx.line_to(1400, 800 + 1000 * s)
+        ctx.stroke()
 
+        # Find exon start and end position
+        start = 0
+        end = 0
+        for i in range(len(sequence)):
+            if sequence[i].isupper():
+                start = i
+                break
+        # Iterate backwards to find the end
+        for i in range(len(sequence) - 1, 0, -1):
+            if sequence[i].isupper():
+                end = i
+                break
+        print(start)
+        print(end)
+        # Draw exon
+        # x,y of top left corner, width, height
+        ctx.rectangle(start*scale_factor, 750 + 1000 * s,
+                      (end-start)*scale_factor, 100)
+        ctx.fill()
+
+        # Draw motifs
+        motifs = matches[s][2]
+        for i in range(len(motifs)):
+            # Each new motif gets the next set of RBG values from colors
+            ctx.set_source_rgb(colors[i][0], colors[i][1], colors[i][2])
+            for match_position in range(len(motifs[i][1])):
+                start_position = motifs[i][1][match_position]
+                ctx.rectangle(start_position*scale_factor + 100, 775 + 1000 * s, 10, 50)
+                ctx.fill()
+
+        # Sequence ID Title
+        ctx.set_source_rgb(0, 0, 0)
+        ctx.move_to(100, 100 + 1000 * s)
+        ctx.set_font_size(36)
+        ctx.show_text(matches[s][0])
+
+        # Legend
+        ctx.move_to(1200, 100 + 1000 * s)
+        ctx.show_text("Motif Legend")
+        ctx.set_font_size(24)
+        for i in range(len(motifs)):
+            ctx.move_to(1250, 160 + i * 50 + 1000 * s)
+            ctx.show_text(motifs[i][0])
+            ctx.set_source_rgb(colors[i][0], colors[i][1], colors[i][2])
+            ctx.rectangle(1210, 135 + i * 50 + 1000 * s, 25, 25)
+            ctx.fill()
+            ctx.set_source_rgb(0, 0, 0)
+
+        # Divider to separate next figure
+        ctx.move_to(0, 1000 + 1000 * s)
+        ctx.set_source_rgb(0.5, 0.5, 0.5)
+        ctx.line_to(1500, 1000 + 1000 * s)
+        ctx.stroke()
 
 
 def main():
     args = get_arguments()
-    motif_list = ["GATAC", "MATAM"]
     sequence_list = parse_input_sequence(args.sequence_input)
+    motif_list = parse_input_motifs(args.motifs_input)
     matches = find_motif_indices(motif_list, sequence_list)
     # print(matches[0]) # First sequence and matches
     # print(matches[0][0]) # First sequence ID
-    # print(matches[0][1]) # First sequence list of matching motifs
-    # print(matches[0][1][0]) # First sequence first motif, ID and indices
-    # print(matches[0][1][0][0])  # First sequence first motif ID
-    # print(matches[0][1][0][1])  # first sequence first motif list of indices
+    # print(matches[0][2]) # First sequence list of matching motifs
+    # print(matches[0][2][0]) # First sequence first motif, ID and indices
+    # print(matches[0][2][0][0])  # First sequence first motif ID
+    # print(matches[0][2][0][1])  # first sequence first motif list of indices
     draw_figures(matches)
 
 
