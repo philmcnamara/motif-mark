@@ -1,6 +1,6 @@
 # Motif-mark
 
-motif-mark.py creates graphics to visualize motifs in a given DNA or RNA sequence. It supports up to 10 simultaneous motifs and any number of input sequences from a FASTA file. Output is a SVG file of dimensions 1500 by 1000 * *n* pixels where *n* is the number of input sequences. Motifs are drawn with contrasting colors, and an adjustable scale bar allows for visual comparison.
+motif-mark.py creates graphics to visualize motifs in a given DNA or RNA sequence. It supports up to 10 simultaneous motifs and any number of input sequences from a FASTA file. Output is a SVG file of dimensions 1500 by 1000 * *n* pixels with *n* sequences. Motifs are drawn with contrasting colors, and an adjustable scale bar allows for visual comparison.
 
 ## Arguments
 
