@@ -9,3 +9,7 @@ motif-mark.py creates graphics to visualize motifs in a given DNA or RNA sequenc
 | **-s** | **--sequence_input**   | **FASTA input file with sequences**               |
 | **-o** | **--output**           | **Output file name (omit extension, always SVG)** |
 | **-l** | **--scale_bar_length** | **Length of the scale bar in bp (base pairs)**    |
+
+## Example Output
+
+![](Figure_1.svg)
